@@ -176,9 +176,7 @@ local color_slot = {
 local eqframe = nil
 
 -- number colums
--- CreateConVar("ttt_bem_cols", 4, {FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE, FCVAR_REPLICATED}, "Sets the number of columns in the Traitor/Detective menu's item list.")
-local numColsVar = CreateConVar("ttt_bem_cols", 4, {FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE, FCVAR_REPLICATED}, "Sets the number of columns in the Traitor/Detective menu's item list.")
--- local numCols = numColsVar:GetInt()
+local numColsVar = CreateClientConVar("ttt_bem_cols", 4, true, false, "Sets the number of columns in the Traitor/Detective menu's item list.")
 
 local function TraitorMenuPopup()
    local ply = LocalPlayer()
