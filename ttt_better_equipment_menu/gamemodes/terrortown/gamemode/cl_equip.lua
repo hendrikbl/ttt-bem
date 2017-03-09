@@ -1,5 +1,4 @@
 ---- Traitor equipment menu
-
 local GetTranslation = LANG.GetTranslation
 local GetPTranslation = LANG.GetParamTranslation
 
@@ -175,6 +174,12 @@ local color_slot = {
 };
 
 local eqframe = nil
+
+-- number colums
+-- CreateConVar("ttt_bem_cols", 4, {FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE, FCVAR_REPLICATED}, "Sets the number of columns in the Traitor/Detective menu's item list.")
+local numColsVar = CreateConVar("ttt_bem_cols", 4, {FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE, FCVAR_REPLICATED}, "Sets the number of columns in the Traitor/Detective menu's item list.")
+-- local numCols = numColsVar:GetInt()
+
 local function TraitorMenuPopup()
    local ply = LocalPlayer()
    if not IsValid(ply) or not ply:IsActiveSpecial() then
@@ -234,7 +239,7 @@ local function TraitorMenuPopup()
    --- Construct icon listing
    --- icon size = 64 x 64
    local dlist = vgui.Create("EquipSelect", dequip)
-   local dlistw = 284
+   local dlistw = 288
    dlist:SetPos(0,0)
    dlist:SetSize(dlistw, h - 75)
    dlist:EnableVerticalScrollbar(true)
@@ -245,6 +250,10 @@ local function TraitorMenuPopup()
    local items = GetEquipmentForRole(ply:GetRole())
 
    local to_select = nil
+
+   local numCols = numColsVar:GetInt()
+   local itemSize = (288 - (8 * numCols)) / numCols
+
    for k, item in pairs(items) do
       local ic = nil
 
@@ -290,7 +299,7 @@ local function TraitorMenuPopup()
             ic:EnableMousePassthrough(slot)
          end
 
-         ic:SetIconSize(64)
+         ic:SetIconSize(itemSize)
          ic:SetIcon(item.material)
       elseif item.model then
          ic = vgui.Create("SpawnIcon", dlist)
