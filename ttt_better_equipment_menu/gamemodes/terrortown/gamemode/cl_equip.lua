@@ -2,6 +2,12 @@
 local GetTranslation = LANG.GetTranslation
 local GetPTranslation = LANG.GetParamTranslation
 
+-- create ConVars
+local numColsVar = CreateClientConVar("ttt_bem_cols", 4, true, false, "Sets the number of columns in the Traitor/Detective menu's item list.")
+local numRowsVar = CreateClientConVar("ttt_bem_rows", 5, true, false, "Sets the number of rows in the Traitor/Detective menu's item list.")
+local itemSizeVar = CreateClientConVar("ttt_bem_size", 64, true, false, "Sets the item size in the Traitor/Detective menu's item list.")
+
+
 -- Buyable weapons are loaded automatically. Buyable items are defined in
 -- equip_items_shd.lua
 
@@ -175,10 +181,22 @@ local color_slot = {
 
 local eqframe = nil
 
--- number colums
-local numColsVar = CreateClientConVar("ttt_bem_cols", 4, true, false, "Sets the number of columns in the Traitor/Detective menu's item list.")
-
 local function TraitorMenuPopup()
+  -- calculate dimensions
+  local numCols = numColsVar:GetInt()
+  local numRows = numRowsVar:GetInt()
+  local itemSize = itemSizeVar:GetInt()
+  -- margin
+  local m = 5
+  -- item list width
+  local dlistw = ((itemSize + 2) * numCols) - 2 + 15
+  local dlisth = ((itemSize + 2) * numRows) - 2 + 15
+  -- right column width
+  local diw = 270
+  -- frame size
+  local w = dlistw + diw + (m*4)
+  local h = dlisth + 75
+
    local ply = LocalPlayer()
    if not IsValid(ply) or not ply:IsActiveSpecial() then
       return
@@ -191,7 +209,6 @@ local function TraitorMenuPopup()
    local can_order = credits > 0
 
    local dframe = vgui.Create("DFrame")
-   local w, h = 570, 412
    dframe:SetSize(w, h)
    dframe:Center()
    dframe:SetTitle(GetTranslation("equip_title"))
@@ -199,8 +216,6 @@ local function TraitorMenuPopup()
    dframe:ShowCloseButton(true)
    dframe:SetMouseInputEnabled(true)
    dframe:SetDeleteOnClose(true)
-
-   local m = 5
 
    local dsheet = vgui.Create("DPropertySheet", dframe)
 
@@ -237,20 +252,15 @@ local function TraitorMenuPopup()
    --- Construct icon listing
    --- icon size = 64 x 64
    local dlist = vgui.Create("EquipSelect", dequip)
-   local dlistw = 288
+   -- local dlistw = 288
    dlist:SetPos(0,0)
-   dlist:SetSize(dlistw, h - 75)
+   dlist:SetSize(dlistw, dlisth)
    dlist:EnableVerticalScrollbar(true)
    dlist:EnableHorizontal(true)
-   dlist:SetPadding(4)
-
 
    local items = GetEquipmentForRole(ply:GetRole())
 
    local to_select = nil
-
-   local numCols = numColsVar:GetInt()
-   local itemSize = (288 - (8 * numCols)) / numCols
 
    for k, item in pairs(items) do
       local ic = nil
@@ -332,17 +342,17 @@ local function TraitorMenuPopup()
 
    -- Whole right column
    local dih = h - bh - m*5
-   local diw = w - dlistw - m*6 - 2
+   -- local diw = w - dlistw - m*6 - 2
    local dinfobg = vgui.Create("DPanel", dequip)
    dinfobg:SetPaintBackground(false)
-   dinfobg:SetSize(diw, dih)
+   dinfobg:SetSize(diw - m, dih)
    dinfobg:SetPos(dlistw + m, 0)
 
    -- item info pane
    local dinfo = vgui.Create("ColoredBox", dinfobg)
    dinfo:SetColor(Color(90, 90, 95))
    dinfo:SetPos(0,0)
-   dinfo:StretchToParent(0, 0, 0, dih - 250)
+   dinfo:StretchToParent(0, 0, m*2, 105)
 
    local dfields = {}
    for _, k in pairs({"name", "type", "desc"}) do
@@ -365,7 +375,7 @@ local function TraitorMenuPopup()
 
    local dhelp = vgui.Create("DPanel", dinfobg)
    dhelp:SetPaintBackground(false)
-   dhelp:SetSize(diw, dih - 320)
+   dhelp:SetSize(diw, 64)
    dhelp:MoveBelow(dinfo, m)
 
    local update_preqs = PreqLabels(dhelp, m*7, m*2)
@@ -403,6 +413,36 @@ local function TraitorMenuPopup()
       local dtransfer = CreateTransferMenu(dsheet)
       dsheet:AddSheet(GetTranslation("xfer_name"), dtransfer, "icon16/group_gear.png", false,false, "Transfer credits")
    end
+
+   -- Better Equipment Menu Settings
+   local dbem = vgui.Create("DPanel", dsheet)
+   dbem:SetPaintBackground(false)
+   dbem:StretchToParent(0, 0, 0, 0)
+   local dcols = vgui.Create("DNumSlider", dbem)
+   dcols:SetPos(0, 0)
+   dcols:SetWidth(dbem:GetWide())
+   dcols:SetText("ttt_bem_cols (def. 4)")
+   dcols:SetMin(1)
+   dcols:SetMax(20)
+   dcols:SetDecimals(0)
+   dcols:SetConVar("ttt_bem_cols")
+   local drows = vgui.Create("DNumSlider", dbem )
+   drows:MoveBelow(dcols)
+   drows:SetWidth(dbem:GetWide())
+   drows:SetText("ttt_bem_rows (def. 5)")
+   drows:SetMin(1)
+   drows:SetMax(20)
+   drows:SetDecimals(0)
+   drows:SetConVar("ttt_bem_rows")
+   local dsize = vgui.Create( "DNumSlider", dbem )
+   dsize:MoveBelow(drows)
+   dsize:SetWidth(dbem:GetWide())
+   dsize:SetText("ttt_bem_size (def. 64)")
+   dsize:SetMin(32)
+   dsize:SetMax(128)
+   dsize:SetDecimals(0)
+   dsize:SetConVar("ttt_bem_size")
+   dsheet:AddSheet("BEM Settings", dbem, "icon16/cog.png", false,false, "Better Equipment Menu Settings")
 
    hook.Run("TTTEquipmentTabs", dsheet)
 
