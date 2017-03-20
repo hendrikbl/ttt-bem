@@ -2,11 +2,16 @@
 local GetTranslation = LANG.GetTranslation
 local GetPTranslation = LANG.GetParamTranslation
 
--- create ConVars
+-- create ClientConVars
 local numColsVar = CreateClientConVar("ttt_bem_cols", 4, true, false, "Sets the number of columns in the Traitor/Detective menu's item list.")
 local numRowsVar = CreateClientConVar("ttt_bem_rows", 5, true, false, "Sets the number of rows in the Traitor/Detective menu's item list.")
 local itemSizeVar = CreateClientConVar("ttt_bem_size", 64, true, false, "Sets the item size in the Traitor/Detective menu's item list.")
 
+-- get serverside ConVars
+local allowChangeVar = GetConVar("ttt_bem_allow_change")
+local serverColsVar = GetConVar("ttt_bem_sv_cols")
+local serverRowsVar = GetConVar("ttt_bem_sv_rows")
+local serverSizeVar = GetConVar("ttt_bem_sv_size")
 
 -- Buyable weapons are loaded automatically. Buyable items are defined in
 -- equip_items_shd.lua
@@ -183,9 +188,15 @@ local eqframe = nil
 
 local function TraitorMenuPopup()
   -- calculate dimensions
-  local numCols = numColsVar:GetInt()
-  local numRows = numRowsVar:GetInt()
-  local itemSize = itemSizeVar:GetInt()
+  local numCols = serverColsVar:GetInt()
+  local numRows = serverRowsVar:GetInt()
+  local itemSize = serverSizeVar:GetInt()
+
+  if allowChangeVar:GetBool() then
+    numCols = numColsVar:GetInt()
+    numRows = numRowsVar:GetInt()
+    itemSize = itemSizeVar:GetInt()
+  end
   -- margin
   local m = 5
   -- item list width
