@@ -6,12 +6,18 @@ local GetPTranslation = LANG.GetParamTranslation
 local numColsVar = CreateClientConVar("ttt_bem_cols", 4, true, false, "Sets the number of columns in the Traitor/Detective menu's item list.")
 local numRowsVar = CreateClientConVar("ttt_bem_rows", 5, true, false, "Sets the number of rows in the Traitor/Detective menu's item list.")
 local itemSizeVar = CreateClientConVar("ttt_bem_size", 64, true, false, "Sets the item size in the Traitor/Detective menu's item list.")
+local showCustomVar = CreateClientConVar("ttt_bem_marker_custom", 1, true, false, "Should custom items get a marker?")
+local showFavoriteVar = CreateClientConVar("ttt_bem_marker_fav", 1, true, false, "Should favorite items get a marker?")
+local showSlotVar = CreateClientConVar("ttt_bem_marker_slot", 1, true, false, "Should items get a slot-marker?")
 
 -- get serverside ConVars
 local allowChangeVar = GetConVar("ttt_bem_allow_change")
 local serverColsVar = GetConVar("ttt_bem_sv_cols")
 local serverRowsVar = GetConVar("ttt_bem_sv_rows")
 local serverSizeVar = GetConVar("ttt_bem_sv_size")
+
+-- add favorites DB functions
+include("favorites_db.lua")
 
 -- Buyable weapons are loaded automatically. Buyable items are defined in
 -- equip_items_shd.lua
@@ -162,8 +168,8 @@ end
 -- quick, very basic override of DPanelSelect
 local PANEL = {}
 local function DrawSelectedEquipment(pnl)
-   surface.SetDrawColor(255, 200, 0, 255)
-   surface.DrawOutlinedRect(0, 0, pnl:GetWide(), pnl:GetTall())
+  surface.SetDrawColor(255, 200, 0, 255)
+  surface.DrawOutlinedRect(0, 0, pnl:GetWide(), pnl:GetTall())
 end
 
 function PANEL:SelectPanel(pnl)
@@ -273,15 +279,19 @@ local function TraitorMenuPopup()
 
    local to_select = nil
 
+   -- temp table for sorting
+   local paneltablefav = {}
+   local paneltable = {}
+
    for k, item in pairs(items) do
       local ic = nil
 
       -- Create icon panel
       if item.material then
-         if item.custom then
-            -- Custom marker icon
-            ic = vgui.Create("LayeredIcon", dlist)
+         ic = vgui.Create("LayeredIcon", dlist)
 
+         if item.custom && showCustomVar:GetBool() then
+            -- Custom marker icon
             local marker = vgui.Create("DImage")
             marker:SetImage("vgui/ttt/custom_marker")
             marker.PerformLayout = function(s)
@@ -294,14 +304,31 @@ local function TraitorMenuPopup()
             ic:AddLayer(marker)
 
             ic:EnableMousePassthrough(marker)
-         elseif not ItemIsWeapon(item) then
-            ic = vgui.Create("SimpleIcon", dlist)
-         else
-            ic = vgui.Create("LayeredIcon", dlist)
+         end
+
+         -- Favorites marker icon
+         ic.favorite = false
+         local favorites = GetFavorites(ply:SteamID(), ply:GetRole())
+         if favorites then
+           if IsFavorite(favorites, item.id) then
+             ic.favorite = true
+             if showFavoriteVar:GetBool() then
+               local star = vgui.Create("DImage")
+               star:SetImage("icon16/star.png")
+               star.PerformLayout = function(s)
+                                         s:AlignTop(2)
+                                         s:AlignRight(2)
+                                         s:SetSize(12, 12)
+                                      end
+               star:SetTooltip("Favorite")
+               ic:AddLayer(star)
+               ic:EnableMousePassthrough(star)
+             end
+           end
          end
 
          -- Slot marker icon
-         if ItemIsWeapon(item) then
+         if ItemIsWeapon(item) && showSlotVar:GetBool() then
             local slot = vgui.Create("SimpleIconLabelled")
             slot:SetIcon("vgui/ttt/slotcap")
             slot:SetIconColor(color_slot[ply:GetRole()] or COLOR_GREY)
@@ -345,9 +372,22 @@ local function TraitorMenuPopup()
          ic:SetIconColor(color_darkened)
       end
 
-      dlist:AddPanel(ic)
+      if ic.favorite then
+        paneltablefav[k] = ic
+      else
+        paneltable[k] = ic
+      end
+
    end
 
+   -- add favorites first
+   for _, panel in pairs(paneltablefav) do
+     dlist:AddPanel(panel)
+   end
+   -- non favorites second
+   for _, panel in pairs(paneltable) do
+     dlist:AddPanel(panel)
+   end
 
    local bw, bh = 100, 25
 
@@ -476,7 +516,42 @@ local function TraitorMenuPopup()
    dcancel:SetSize(bw, bh)
    dcancel:SetDisabled(false)
    dcancel:SetText(GetTranslation("close"))
-   dcancel.DoClick = function() dframe:Close() end
+   dcancel.DoClick = function()
+     dframe:Close()
+   end
+
+   function file.AppendLine(filename, addme)
+	   data = file.Read(filename)
+	   if ( data ) then
+	     file.Write(filename, data .. "\n" .. tostring(addme))
+	   else
+		   file.Write(filename, tostring(addme))
+	   end
+   end
+
+   --add as favorite button
+   dfav = vgui.Create("DButton", dinfobg)
+   dfav:SetPos(0, dih - bh*2)
+   dfav:MoveRightOf(dconfirm)
+   dfav:SetSize(bh, bh)
+   dfav:SetDisabled(false)
+   dfav:SetText("")
+   dfav:SetImage("icon16/star.png")
+   dfav.DoClick = function()
+     local ply = LocalPlayer()
+     local role = ply:GetRole()
+     local guid = ply:SteamID()
+     local pnl = dlist.SelectedPanel
+     if not pnl or not pnl.item then return end
+     local choice = pnl.item
+     local weapon = choice.id
+     CreateFavTable()
+     if pnl.favorite then
+       RemoveFavorite(guid, role, weapon)
+     else
+       AddFavorite(guid, role, weapon)
+     end
+   end
 
    dframe:MakePopup()
    dframe:SetKeyboardInputEnabled(false)
