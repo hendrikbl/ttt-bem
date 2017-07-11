@@ -28,19 +28,19 @@ This is a small addon which aims to make the Detective-/Traitor-Equipment Shop e
 
 ## ConVars
 ### Clientside
-- ttt_bem_cols (def. 4): Set number of columns
-- ttt_bem_rows (def. 5): Set number of rows
-- ttt_bem_size (def. 64): Set item size
-- ttt_bem_marker_custom (def. 1): Show custom item markers
-- ttt_bem_marker_slot (def. 1): Show slot markers
-- ttt_bem_marker_fav (def. 1): Show favorite item markers
+- `ttt_bem_cols` (def. 4): Set number of columns
+- `ttt_bem_rows` (def. 5): Set number of rows
+- `ttt_bem_size` (def. 64): Set item size
+- `ttt_bem_marker_custom` (def. 1): Show custom item markers
+- `ttt_bem_marker_slot` (def. 1): Show slot markers
+- `ttt_bem_marker_fav` (def. 1): Show favorite item markers
 
 ### Serverside
-- ttt_bem_allow_change (def. 1): Allow clients to change the layout
+- `ttt_bem_allow_change` (def. 1): Allow clients to change the layout
 The following values only are used when the above is set to false (0):
-- ttt_bem_sv_cols (def. 4): Set number of columns (serverwide)
-- ttt_bem_sv_rows (def. 5): Set number of rows (serverwide)
-- ttt_bem_sv_size (def. 64): Set item size (serverwide)
+- `ttt_bem_sv_cols` (def. 4): Set number of columns (serverwide)
+- `ttt_bem_sv_rows` (def. 5): Set number of rows (serverwide)
+- `ttt_bem_sv_size` (def. 64): Set item size (serverwide)
 
 ## Usage
 
